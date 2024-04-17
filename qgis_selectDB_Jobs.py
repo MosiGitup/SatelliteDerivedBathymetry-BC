@@ -1,3 +1,7 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi
+"""
 from qgis.core import *
 from qgis.gui import *
 from qgis.PyQt.QtWidgets import *
