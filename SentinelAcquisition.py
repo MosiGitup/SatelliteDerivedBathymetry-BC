@@ -1,3 +1,8 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
 import os
 import glob
 import geojson
@@ -9,6 +14,9 @@ import geopandas as gpd
 import requests
 from datetime import datetime, timedelta
 import _pickle as pickle
+
+username_copernicus = sys.argv[13]
+password_copernicus = sys.argv[14]
 
 def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, tileName):
     gjsonFile = gpd.read_file(gjson)
@@ -23,7 +31,6 @@ def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, 
     F = Polygon([(left, down), (right, down), (right, up), (left, up)])
     footprint = F.wkt
     productname='SENTINEL-2'
-    # cloudCover = ['5.00', '10.00', '15.00', '20.00', '50.00', '70.00']
     cloudCover = ['5.00', '10.00', '15.00', '100.0']
     productType = 'S2MSI1C'
     print('\033[1;34mDate interval to download the images: ''\033[0m')
@@ -51,7 +58,7 @@ def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, 
                 raise e
             return r.json()["access_token"]
 
-        access_token = get_access_token('mohsen.feizabadi@umontreal.ca', 'MosiCoper_2018')
+        access_token = get_access_token(username_copernicus, password_copernicus)
         json = requests.get(f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq '{productname}' and\
                               Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value lt {cloudCover[cp]}) and\
                               Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'productType' and att/OData.CSC.StringAttribute/Value eq '{productType}') and\
@@ -110,10 +117,7 @@ def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, 
                 one_hour_after = sat_date_time + timedelta(hours=1)
                 new_vectorSDB = pd.to_datetime(vectorSDB['t'][1:])
                 bathy_vectorSDB = new_vectorSDB[(new_vectorSDB >= one_hour_before) & (new_vectorSDB <= one_hour_after)]
-                # filtered_vectorSDB[cloudCover[cp] + '% Cloud-' + satDateTime] = bathy_vectorSDB
-                # filtered_vectorSDB[satDateTime] = bathy_vectorSDB
                 filtered_vectorSDB[sat_image[-15:]] = bathy_vectorSDB
-                # # print('filtered_vectorSDB --> ', filtered_vectorSDB)
                 bathyPointsInImage = len(bathy_vectorSDB)
                 print('\033[1;36mNumber of bathymetry points in this acqusition imagery --> ' + str(bathyPointsInImage) + '\033[0m')
                 if bathy_vectorSDB.empty:
@@ -125,11 +129,9 @@ def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, 
                     if imageList[cloudCover[cp] + '% Cloud']:
                         imageList[cloudCover[cp] + '% Cloud'] += [sat_image]
                         uuidList[cloudCover[cp] + '% Cloud'] += [UUID]
-                        # filtered_vectorSDB[cloudCover[cp] + '% Cloud'] += [bathy_vectorSDB]
                     else:
                         imageList[cloudCover[cp] + '% Cloud'] = [sat_image]
                         uuidList[cloudCover[cp] + '% Cloud'] = [UUID]
-                        # filtered_vectorSDB[cloudCover[cp] + '% Cloud'] = [bathy_vectorSDB]
                     qst1 = input('\033[1;32mWould you like to select another image (y oy n): ''\033[0m')
                     if qst1 == 'y':
                         qst2 = 1
@@ -139,36 +141,11 @@ def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, 
                         repeatSecondLoop = 0
                         qst2 = 0
                         break
-                # url = f"https://zipper.dataspace.copernicus.eu/odata/v1/Products({img_ind[int(select_image)]})/$value"
-                # headers = {"Authorization": f"Bearer {access_token}"}
-                # session = requests.Session()
-                # session.headers.update(headers)
-                # response = session.get(url, headers=headers, stream=True)
-                # image_name = imgs[int(select_image)]
-        # print('name -->', image_name)
-
-        # print('list 1 -->', imageList)
-        # for i in range(len(uuidList)):
         if len(uuidList[cloudCover[cp] + '% Cloud']) == 0:
             del uuidList[cloudCover[cp] + '% Cloud']
             del imageList[cloudCover[cp] + '% Cloud']
-        # print('list 2 -->', imageList)
-        # print('filtered_vectorSDB --> ', filtered_vectorSDB)
-
-                # with open(acolite_path + '/' + image_name + ".zip", "wb") as file:
-                #     for chunk in response.iter_content(chunk_size=8192):
-                #         if chunk:
-                #             file.write(chunk)
         varDict = {'date1': date1, 'date2': date2, 'vectorSDB_date': vectorSDB_date, 'imageList': imageList,
                    'uuidList': uuidList, 'filtered_vectorSDB': filtered_vectorSDB}
-        # f = open(project_path + '/variables.txt', 'w')
         with open(project_path + '/variables.txt', 'wb') as f:
             f.write(pickle.dumps(varDict))
-        # f.write('date1 = ' + repr(date1) + '\n')
-        # f.write('date2 = ' + repr(date2) + '\n')
-        # f.write('vectorSDB_date = ' + repr(vectorSDB_date) + '\n')
-        # f.write('imageList = ' + repr(imageList) + '\n')
-        # f.write('uuidList = ' + repr(uuidList) + '\n')
-        # f.write('filtered_vectorSDB = ' + repr(filtered_vectorSDB) + '\n')
-        # f.close()
     return imageList, uuidList, filtered_vectorSDB
