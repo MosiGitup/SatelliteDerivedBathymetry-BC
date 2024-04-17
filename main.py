@@ -20,7 +20,14 @@ def print_hi(name):
 
 
 if __name__ == '__main__':
-    print_hi('CIDCO: CSB-BC')
+    print_hi('CIDCO: CSB-BC \n'
+             'This program calculates the satellite derived bathymetry from "Sentinel-2 MSI" by using the "acolite" atmospheric correction program. \n'
+             'It needs two programs ; "msi_acolite_rhow_modify.py" and "SatelliteDerivedBathymetry.py" \n'
+             '1. In "acolite" processing: \n'
+             'Surface = Bathymetric surface (1m resolution or less) .txt or .csv format. \n'
+             'TmpPath = The path of acolite outputs. \n'
+             '2. In "satellite derived bathymetry" processing: \n'
+             'There are two methods (Stumpf and Lyzenga).')
 
 logging.getLogger('qgis').setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
