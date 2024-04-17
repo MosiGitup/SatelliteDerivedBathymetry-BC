@@ -2,11 +2,6 @@
 # Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
 @Mohsen_Feizabadi ---
 """
-"""
-Satellite derived bathymetry calculation from water reflectance value as input file (.tif) by using two methods:
-1. Stumpf  --> https://doi.org/10.4319/lo.2003.48.1_part_2.0547
-2. Lyzenga --> https://doi.org/10.1080/01431168108948342
-"""
 
 from tkinter import filedialog, Tk
 import rasterio
@@ -18,6 +13,11 @@ from datetime import datetime, timedelta
 
 
 class SatelliteDerivedBathymetry_all:
+    """
+    Satellite derived bathymetry calculation from water reflectance value as input file (.tif) by using two methods:
+    1. Stumpf  --> https://doi.org/10.4319/lo.2003.48.1_part_2.0547
+    2. Lyzenga --> https://doi.org/10.1080/01431168108948342
+    """
 
     ## *** Its input are two bands (.tif) of L2W acolite outputs. Its outputs are two .csv files which includes; x, y and pixel value columns.
     def how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, crs):
@@ -346,6 +346,15 @@ class SatelliteDerivedBathymetry_all:
         ## *** Finding the index of more than 30m depth of bathymetry points.
         below30_index = np.where(control_points_extract[:, 2] <= -30)
         below30 = np.column_stack((below30_index[0], rp_pixel[below30_index[0]]))
+
+        """
+        Log-Linear formula:
+        L_linear = Ln(Li - Li_min)
+        L_linear: linearized spectral value
+        Li: pixel values of band i (raster files)
+        Li_min: minimum values of band i (more than 30m depth)
+        """
+
         min_reflect_rhow = []
         rp_pixel_sub = []
         nan_values = {}
