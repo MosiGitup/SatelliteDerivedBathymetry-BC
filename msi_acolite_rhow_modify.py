@@ -1,5 +1,14 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
+acolite_package = sys.argv[17]
+username_copernicus = sys.argv[18]
+password_copernicus = sys.argv[19]
+
 import sys, os
-UserHome = os.path.expanduser("/home/cidco/Documents/Acolite package/")
+UserHome = os.path.expanduser(acolite_package)
 sys.path.append(os.path.join(UserHome))
 import acolite as ac
 import geopandas as gpd
@@ -18,7 +27,7 @@ DownloadResult = None
 
 class msi_acolite:
     def __init__(self, Surface, TideHeight, EPSG, Date, TmpPath, L1C_path, vectorSDB_date, tileName, vectorSDB):
-        self.SentinelAPI = SentinelAPI('mohsen.feizabadi@umontreal.ca', 'MosiCoper_2018', 'https://sh.dataspace.copernicus.eu/api/v1/catalog/1.0.0/collections/sentinel-2-l1c')
+        # self.SentinelAPI = SentinelAPI(username_copernicus, password_copernicus, 'https://sh.dataspace.copernicus.eu/api/v1/catalog/1.0.0/collections/sentinel-2-l1c')
         self.EPSG = EPSG
         self.Surface = Surface
         self.GeometrySurface = gpd.points_from_xy(self.Surface['x'], self.Surface['y'], crs="EPSG:"+str(self.EPSG))
@@ -54,7 +63,7 @@ class msi_acolite:
                 raise e
             return r.json()["access_token"]
 
-        access_token = get_access_token('mohsen.feizabadi@umontreal.ca', 'MosiCoper_2018')
+        access_token = get_access_token(username_copernicus, password_copernicus)
         L1cPath = os.path.join(self.L1C_path, "L1C")
         try:
             os.makedirs(L1cPath)
