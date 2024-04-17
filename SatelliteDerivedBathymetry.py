@@ -1,3 +1,8 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
 from tkinter import filedialog, Tk
 import rasterio
 import numpy as np
@@ -5,8 +10,6 @@ import csv, os, sys, glob
 import pandas as pd
 from numpy.linalg import inv
 from datetime import datetime, timedelta
-
-txtDir = "/media/cidco/blanc-sablon/Mosi Drive/Python3/"
 
 
 class SatelliteDerivedBathymetry_all:
