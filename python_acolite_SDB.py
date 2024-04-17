@@ -1,3 +1,8 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
 from tkinter import filedialog, Tk
 import glob
 import rasterio
@@ -7,8 +12,8 @@ import pandas as pd
 from rasterio.merge import merge
 import shutil
 
-txtDir = "/media/cidco/blanc-sablon/Mosi Drive/Python3/Bathymetry"
-
+initialdir_txt = sys.argv[15]
+acolite_dir = sys.argv[16]
 
 def tifConvertorForAcolite(vrtPath, pro_dir):
     searchCriteria = "*.tif"
@@ -18,7 +23,7 @@ def tifConvertorForAcolite(vrtPath, pro_dir):
     raster_array = {}
     raster_txtFile = {}
     root = Tk()
-    txtOutputPath = filedialog.askdirectory(parent=root, initialdir='/media/cidco/blanc-sablon/Mosi Drive/Python3/Bathymetry/inputs', title='Directory to save surfaces as .txt')
+    txtOutputPath = filedialog.askdirectory(parent=root, initialdir=initialdir_txt, title='Directory to save surfaces as .txt')
     root.update()
     root.destroy()
     txtOutputDir = os.path.join(txtOutputPath, pro_dir)
@@ -63,7 +68,7 @@ def msiAcoliteCalculation(txtPath, crs, pro_dir, sdb_csv_path, tileName, uuidLis
     TideHeight = 0
     EPSG = crs.data['init'][5:]
     root = Tk()
-    acoliteOutputPath = filedialog.askdirectory(initialdir=txtDir, title='Acolite Output Directory')
+    acoliteOutputPath = filedialog.askdirectory(initialdir=acolite_dir, title='Acolite Output Directory')
     root.update()
     root.destroy()
     acoliteOutputDir = os.path.join(acoliteOutputPath, pro_dir)
@@ -152,7 +157,6 @@ def mergeAcoliteTifOutputs(acolitePath):
 
 
 def sdbCalculationFull(acoliteOutputDir, crs, project_path, pro_dir, processStep, filtered_vectorSDB_projected):
-    sys.path.append("/home/cidco/Documents/QGIS/Pycharm/qgis-server-3")
     from SatelliteDerivedBathymetry import SatelliteDerivedBathymetry_all
     dirAcolite = os.listdir(acoliteOutputDir)
     for acoliteDir in dirAcolite:
