@@ -1,6 +1,6 @@
 """
 # Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
-@Mohsen_Feizabadi ---
+@Mohsen_Feizabadi 
 """
 
 import logging, os, warnings, glob, subprocess, signal, sys
