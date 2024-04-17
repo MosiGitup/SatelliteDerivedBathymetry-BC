@@ -25,24 +25,33 @@ import numpy as np
 DownloadResult = None
 
 
+## *** Class to download Sentinel-2 MSI data from Copernicus Hub and process it with ACOLITE to get the water reflectance values.
 class msi_acolite:
     def __init__(self, Surface, TideHeight, EPSG, Date, TmpPath, L1C_path, vectorSDB_date, tileName, vectorSDB):
-        # self.SentinelAPI = SentinelAPI(username_copernicus, password_copernicus, 'https://sh.dataspace.copernicus.eu/api/v1/catalog/1.0.0/collections/sentinel-2-l1c')
         self.EPSG = EPSG
+
+        # Convert Surface to Geodataframe
         self.Surface = Surface
         self.GeometrySurface = gpd.points_from_xy(self.Surface['x'], self.Surface['y'], crs="EPSG:"+str(self.EPSG))
         self.gdf = gpd.GeoDataFrame(self.Surface, geometry=self.GeometrySurface)
+
+        # Create BBox from Surface
         self.BBox = box(*self.gdf.total_bounds)
+
+        # Convert BBox to WGS84 for satellite image search only
         self.BBoxJSON = gpd.GeoSeries([self.BBox]).set_crs('EPSG:'+str(self.EPSG)).to_crs('EPSG:4326').to_json()
         self.BBoxJSON = json.loads(self.BBoxJSON)
         self.Date = Date
         self.TmpPath = TmpPath
         self.L1C_path = L1C_path
+
+        # Optional TideHeight to use H (water column height) instead of Z (bottom altitude)
         self.TidelHeight = TideHeight
         self.SDBdate = vectorSDB_date
         self.TileName = tileName[4:10]
         self.vectorSDB = vectorSDB
 
+    ## *** Download the Sentinel-2 MSI data from Copernicus Hub
     def download_L1c(self, uuidList, imageList):
         global DownloadResult
 
@@ -86,12 +95,15 @@ class msi_acolite:
         DownloadResult = downloaded_image
         return DownloadResult
 
+    ## *** Water reflectance values calculation
     def get_rhow(self, uuidList, imageList, crs, filtered_vectorSDB_projected_selected, txtSurface, DownloadResult):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
         if not txtSurface:
             DownloadResult = self.download_L1c(uuidList, imageList)
             txtSurface = 1
+
+        ## *** Create directory for ACOLITE processing
         AcolitePath = os.path.join(self.TmpPath)
         try:
             os.makedirs(AcolitePath)
@@ -99,11 +111,17 @@ class msi_acolite:
             print("")
             pass
         _, file_dir = os.path.split(DownloadResult)
+
+        ## *** Unzip the L1C product to input the SAFE folder to acolite
         shutil.unpack_archive(DownloadResult, AcolitePath)
         InFile = os.path.join(AcolitePath, file_dir[:-4]+".SAFE")
+
+        ## *** Save the bounding box as a geojson file to use as a polygon limit in ACOLITE processing
         TmpGeojson = os.path.join(AcolitePath, "polygon_limit.geojson")
         with open(TmpGeojson, 'w') as outfile:
             json.dump(self.BBoxJSON, outfile)
+
+        ## *** Define the ACOlITE settings for the atmospheric compensation processing
         acolitesettings = {"inputfile": InFile,
                            "output": AcolitePath,
                            "polygon": TmpGeojson,
