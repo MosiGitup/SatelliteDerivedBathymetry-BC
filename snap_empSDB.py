@@ -1,5 +1,16 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
+snappy_dir = sys.argv[23]
+username_copernicus = sys.argv[24]
+password_copernicus = sys.argv[25]
+download_dir = sys.argv[26]
+snap_bin_dir = sys.argv[27]
+
 import sys
-sys.path.append('/home/cidco/Documents')
+sys.path.append(snappy_dir)
 import snappy
 from datetime import datetime, timedelta, date
 import os, glob, subprocess, requests, json
@@ -10,7 +21,6 @@ from zipfile import ZipFile
 from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
-
 
 def downloadL2A(date1, date2, geoFile, vectorSDB_date, tileName):
     gjsonFile = read_geojson(geoFile)
@@ -49,7 +59,7 @@ def downloadL2A(date1, date2, geoFile, vectorSDB_date, tileName):
         except Exception as e:
             raise e
         return r.json()["access_token"]
-    access_token = get_access_token('mohsen.feizabadi@umontreal.ca', 'MosiCoper_2018')
+    access_token = get_access_token(username_copernicus, password_copernicus)
     Fjson = requests.get(f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq '{productname}' and\
                           Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value lt {cloudCover}) and\
                           Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'productType' and att/OData.CSC.StringAttribute/Value eq '{productType}') and\
@@ -73,7 +83,7 @@ def downloadL2A(date1, date2, geoFile, vectorSDB_date, tileName):
                 print('\033[1;34m', '[' + str(i) + '] ---> ', imgs[i], '\033[0m')
     select_image = input('\033[1;32mSelect your interest image number: ''\033[0m')
     root = Tk()
-    download_path = filedialog.askdirectory(initialdir='/media/cidco/blanc-sablon/Mosi Drive/Python3/Bathymetry', title='Select Image Download directory')
+    download_path = filedialog.askdirectory(initialdir=download_dir, title='Select Image Download directory')
     root.update()
     root.destroy()
     url = f"https://zipper.dataspace.copernicus.eu/odata/v1/Products({img_ind[int(select_image)]})/$value"
@@ -84,6 +94,7 @@ def downloadL2A(date1, date2, geoFile, vectorSDB_date, tileName):
     image_name = imgs[int(select_image)]
     downloaded_image = download_path + '/' + image_name + ".zip"
     if not os.path.isfile(downloaded_image):
+        print('\033[1;32mDownloading ... ''\033[0m')
         with open(downloaded_image, "wb") as file:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
@@ -105,16 +116,11 @@ def ReaSamSubS2(s2image, S2path, poly, acolite_path):
     for i in range(len(image_coord)):
         image_coord[i][1] = float(coord_image[2*i])
         image_coord[i][0] = float(coord_image[2*i+1])
-    # print('image_coord -->', image_coord)
     minLon_img = min(image_coord[:, 0])
     maxLon_img = max(image_coord[:, 0])
     minLat_img = min(image_coord[:, 1])
     maxLat_img = max(image_coord[:, 1])
-    # print('min-max lon,lat -->', minLon_img, maxLon_img, minLat_img, maxLat_img)
-    # print('poly -->', poly)
-    # print('poly bounds -->', poly.bounds)
     PolyB = list(poly.bounds)
-    # print('PolyB --> ', PolyB)
     if PolyB[0] < minLon_img:
         PolyB[0] = minLon_img
     elif PolyB[1] < minLat_img:
@@ -123,18 +129,7 @@ def ReaSamSubS2(s2image, S2path, poly, acolite_path):
         PolyB[2] = maxLon_img
     elif PolyB[3] > maxLat_img:
         PolyB[3] = maxLat_img
-    # print('new PolyB --> ', PolyB)
     poly = Polygon([(PolyB[0], PolyB[1]), (PolyB[2], PolyB[1]), (PolyB[2], PolyB[3]), (PolyB[0], PolyB[3])])
-    # print('new poly --> ', poly)
-    # print('poly bounds -->', poly.bounds)
-    # if poly.bounds[0] < minLon_img:
-    #     poly.bounds[0] = minLon_img
-    # elif poly.bounds[1] < minLat_img:
-    #     poly.bounds[1] = minLat_img
-    # elif poly.bounds[2] > maxLon_img:
-    #     poly.bounds[2] = maxLon_img
-    # elif poly.bounds[3] > maxLat_img:
-    #     poly.bounds[3] = maxLat_img
     snapDir = acolite_path + '/SNAP'
     s2dirName = snapDir + '/' + s2image[:26]
     try:
@@ -156,12 +151,11 @@ def ReaSamSubS2(s2image, S2path, poly, acolite_path):
 
 
 def Deglint(s2dirName):
-    # print('s2dirName', s2dirName)
     print('')
     print('\033[1;34mCreate vector layer for \"Sun Glint Area\". The name of this layer must be \"polygon\".''\033[0m', '\n')
     print('\033[1;33mDO NOT FORGET TO DELETE \"tie-points\" LAYERS !!!''\033[0m', '\n')
     print('\033[1;34mAfter saving product, close SNAP and wait ...''\033[0m', '\n')
-    subprocess.call(["sh", "/media/cidco/blanc-sablon/ESA-SNAP/snap/bin/snap"])
+    subprocess.call(["sh", snap_bin_dir])
     subset_merge = os.path.join(s2dirName, '*_Res_Sub.dim')
     subsetPath = glob.glob(subset_merge)
     resample_subset = snappy.ProductIO.readProduct(subsetPath[0])
