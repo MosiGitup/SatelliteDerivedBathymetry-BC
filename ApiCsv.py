@@ -1,7 +1,16 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
 import os
 import sys
 import requests
-from qgis_selectDB_Jobs import ymin_tile, ymax_tile, xmin_tile, xmax_tile, project_path, yr_mon_day, mapJson_name, yr, mn, dy, td
+from qgis_selectDB_Jobs import ymin_tile, ymax_tile, xmin_tile, xmax_tile, project_path, yr_mon_day, mapJson_name, yr, mn, dy, td, host_name
+
+access_email = sys.argv[11]
+access_key = sys.argv[12]
+
 csvPath = project_path
 today_csv = str(yr_mon_day.tm_year) + str(yr_mon_day.tm_mon) + str(yr_mon_day.tm_mday)
 print('\033[1;32mVerification of acceptable jobs ... ''\033[0m')
@@ -9,7 +18,6 @@ year = yr
 month = mn
 day = dy
 timeDiff = td
-# today_csv = str(year) + str(month) + str(day)
 
 class CsvApi:
     def __init__(self, host="localhost"):
@@ -18,7 +26,7 @@ class CsvApi:
     def upload(self, userName, key, minLat, maxLat, minLon, maxLon, csvPath, maxDepth, year, month, day, hour, minute, timeDiff):
         sys.stderr.write("requesting ... \n")
 
-        url = "http://{}:8080/CSBWeb/CsvServlet".format("192.168.0.140")
+        url = "http://{}/CSBWeb/CsvServlet".format("csb.cidco.ca")
         payload = {
             "email": userName,
             "apiCsvKey": key,
@@ -52,8 +60,8 @@ class CsvApi:
 csv = CsvApi()
 
 try:
-    userName = 'csb_admin@cidco.ca'
-    key = '58W%:ow!'
+    userName = access_email
+    key = access_key
     minLat = ymin_tile
     maxLat = ymax_tile
     minLon = xmin_tile
