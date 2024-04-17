@@ -2,6 +2,11 @@
 # Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
 @Mohsen_Feizabadi ---
 """
+"""
+Satellite derived bathymetry calculation from water reflectance value as input file (.tif) by using two methods:
+1. Stumpf  --> https://doi.org/10.4319/lo.2003.48.1_part_2.0547
+2. Lyzenga --> https://doi.org/10.1080/01431168108948342
+"""
 
 from tkinter import filedialog, Tk
 import rasterio
@@ -13,8 +18,12 @@ from datetime import datetime, timedelta
 
 
 class SatelliteDerivedBathymetry_all:
+
+    ## *** Its input are two bands (.tif) of L2W acolite outputs. Its outputs are two .csv files which includes; x, y and pixel value columns.
     def how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, crs):
         if select_process == '1':
+
+            ## *** select the bands (e.g. rhow_492 and rhow_560)
             root = Tk()
             search_criteria = "*.tif"
             tif_path = filedialog.askopenfilenames(filetypes=[(".tif file", search_criteria)], initialdir=acoliteaPath, title='Select the required r_how bands')
@@ -25,6 +34,8 @@ class SatelliteDerivedBathymetry_all:
         fname = {}
         raster = []
         raster_array = {}
+
+        ## *** Rater to array
         for i in range(len(tif_path)):
             full_path.append(os.path.realpath(tif_fps[i]))
             path, fname[i] = os.path.split(full_path[i])
@@ -57,6 +68,8 @@ class SatelliteDerivedBathymetry_all:
             os.mkdir(result_dir)
         except:
             print('')
+
+        ## *** Calculation of band ratio of two bands (for Stumpf method)
         if select_process == '1':
             ratio_bands = np.log10(1000*raster[0])/np.log10(1000*raster[1])
             out_meta.update({"driver": "GTiff",
@@ -67,6 +80,8 @@ class SatelliteDerivedBathymetry_all:
                   result_dir + '/BandRatio_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.tif', '\033[0m')
             with rasterio.open(filepath_bandRatio, "w", **out_meta) as dest:
                 dest.write(ratio_bands)
+
+        ## *** Saving .tif file to .csv file
         height = src.shape[0]
         width = src.shape[1]
         filepath_how = {}
@@ -88,23 +103,32 @@ class SatelliteDerivedBathymetry_all:
             return raster, save_dir, output_dir_path, ratio_bands, out_meta, filepath_how, result_dir, fname, lons_array, lats_array, tif_path, output_dir
         else:
             return raster, save_dir, output_dir_path, out_meta, filepath_how, result_dir, fname, lons_array, lats_array
-    
+
+    ## *** Using bathymetry points as input (.csv), the mean value of all bathymetry points inside each pixel (10mx10m resolution) are calculated.
     def intersectPointPixel(filepath_how, select_process, vector_csv_path, output_dir_path, save_dir, qgisPath, filtered_vectorSDB_projected):
         if select_process == '1':
             search_criteria = "*_sdb.csv"
             vector_csv_path = glob.glob(qgisPath + search_criteria)
         _, fname_vec = os.path.split(vector_csv_path[0])
+
+        ## *** Calling the registered raster file (.csv)
         raster_xyz = pd.read_csv(filepath_how[0], sep=",", header=None, names=['x', 'y', 'z'])
+
+        ## *** Finding the indeces of minimum and maximum coordinates of raster (x and y)
         min_x = np.min(raster_xyz.x)
         max_y = np.max(raster_xyz.y)
         row_num = np.where(raster_xyz.x == min_x)
         col_num = np.where(raster_xyz.y == max_y)
-        grid_x_coord = raster_xyz.x[col_num[0]] - 5 
+
+        ## *** Assigning the grid coordinates
+        grid_x_coord = raster_xyz.x[col_num[0]] - 5
         grid_y_coord = raster_xyz.y[row_num[0]] + 5
         last_x_grid = pd.Series([grid_x_coord[col_num[0][-1]] + 10], index=[grid_x_coord.index[-1] + 1])
         grid_x_coord = grid_x_coord._append(last_x_grid)
         first_y_grid = pd.Series([grid_y_coord[row_num[0][-1]] - 10], index=[grid_y_coord.index[-1] + len(col_num[0])])
         grid_y_coord = grid_y_coord._append(first_y_grid)
+
+        ## *** Mean value of all bathymetry points which are inside a pixel. If the points are in a pixel with "NaN" value, the points are removed.
         raster_pix_ind = {}
         intersect_points = {}
         mean_values = {}
@@ -117,17 +141,26 @@ class SatelliteDerivedBathymetry_all:
                     nan_detect = mean_values[j, i].dropna()
                     if len(nan_detect) == 2:
                         del mean_values[j, i]
+
+        ## *** Saving the results in .csv format
         filepath_vec = save_dir + '/' + fname_vec[:-8] + '_insidePixels.csv'
         print('\033[1;34m', 'Points inside the pixels: ' + fname_vec[:-8] + '_insidePixels.csv', '\033[0m')
         pd.DataFrame.from_dict(data=mean_values, orient='index').to_csv(filepath_vec, header=False)
         return filepath_vec, vector_csv_path
     
+    ## *** Calculation of pixels mean value for the band ratio pixles which have the bathymetry points for inserted two bands (Stumpf method).
     def BR_PointrasterCoordinates(filepath_how, filepath_vec, save_dir, fname):
+
+        ## *** Calling the registered raster files and bathymetry points file (.csv).
         raster1 = pd.read_csv(filepath_how[0], sep=",", header=None, names=['x', 'y', 'z'])
         raster2 = pd.read_csv(filepath_how[1], sep=",", header=None, names=['x', 'y', 'z'])
         points = pd.read_csv(filepath_vec, sep=",", header=None, names=['x', 'y', 'z'])
+
+        ## *** Band ratio calculation and create a dataframe.
         raster_ratio = {'x': raster1.x, 'y': raster1.y, 'z': np.log10(1000*raster1.z)/np.log10(1000*raster2.z)}
         raster_ratio_xyz = pd.DataFrame(raster_ratio)
+
+        ## *** Assigning the x and y coordinates for new dataframe and removing the "NaN" values.
         control_points = points.iloc[:].values
         raster_index = []
         pixel_extract = {}
@@ -145,11 +178,14 @@ class SatelliteDerivedBathymetry_all:
         for j in range(len(pixel_extract)):
             new_pixel_extract.append(list(pixel_extract_values[j]))
         new_pixel_extract = np.array(new_pixel_extract)
+
+        ## *** Saving the results in .csv format
         filepath_ras = save_dir + '/BR_vector_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.csv'
         print('\033[1;34m', 'Band ratio vector file: BR_vector_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.csv', '\033[0m')
         pd.DataFrame(new_pixel_extract).to_csv(filepath_ras, sep=",", header=False, index=True)
         return control_points_extract, filepath_ras, new_pixel_extract
     
+    ## *** Calculation of Stumpf parameters with the Least square method.
     def BR_linearRegression(control_points_extract, filepath_ras, result_dir, fname, new_pixel_extract):
 
         """
@@ -168,16 +204,19 @@ class SatelliteDerivedBathymetry_all:
         
         """
 
+        ## *** Coefficient matrix
         def Jacobian(points):
             J = np.zeros(shape=(1, 2))
             J[0][0] = points
             J[0][1] = 1
             return J
 
+        ## *** Approximation matrix
         def Approximation(a, b, x):
             L = a*x + b
             return L
 
+        ## *** Calling the band ratio file and bathymetry points file as control points (.csv).
         rp = pd.read_csv(filepath_ras, sep=",", header=None, names=['x', 'y', 'z'])
         rp_pixel = np.array(rp.z)
         cp_point = control_points_extract[:, 2]
@@ -187,6 +226,8 @@ class SatelliteDerivedBathymetry_all:
         F = np.zeros(shape=(len(rp), 1))
         Iteration = 1
         error = 1
+
+        ## *** Repeat the computation until reached to the desired accuracy.
         while error > 10e-5:
             Approximate_value[0] = X[0]     # a
             Approximate_value[1] = X[1]     # b
@@ -213,6 +254,7 @@ class SatelliteDerivedBathymetry_all:
         sys.stdout = stdout_fileno
         return X, rp_pixel, cp_point, rp_point
     
+    ## *** Band ratio (Stumpf) satellite derived bathymetry
     def BR_SDB(X, ratio_bands, out_meta, result_dir, fname, crs):
         SDB = X[0][0] * ratio_bands + X[1][0]
         out_meta.update({"driver": "GTiff",
@@ -225,10 +267,15 @@ class SatelliteDerivedBathymetry_all:
             dest.write(SDB)
         return SDB
 
+    ## *** Calculation of pixels mean value which have the bathymetry points for inserted two bands (Lyzenga method).
     def LL_PointrasterCoordinates(filepath_how, filepath_vec, save_dir, fname):
+
+        ## *** Calling the registered raster files and bathymetry points file (.csv).
         raster1 = pd.read_csv(filepath_how[0], sep=",", header=None, names=['x', 'y', 'z'])
         raster2 = pd.read_csv(filepath_how[1], sep=",", header=None, names=['x', 'y', 'z'])
         points = pd.read_csv(filepath_vec, sep=",", header=None, names=['x', 'y', 'z'])
+
+        ## *** Assigning the x and y coordinates for both rasters and removing the "NaN" values.
         control_points = points.iloc[:].values
         raster_index = []
         pixel_extract_r1 = {}
@@ -251,11 +298,14 @@ class SatelliteDerivedBathymetry_all:
             new_pixel_extract[j] = new_pixel_extract[j] + [pixel_extract_r2_values[j][2]]
         new_pixel_extract = np.array(new_pixel_extract)
         print('')
+
+        ## *** Saving the results of two rasters in the same .csv format
         filepath_ras = save_dir + '/LL_vector_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.csv'
         print('\033[1;34m', 'Vector file for two selected bands: LL_vector_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.csv', '\033[0m')
         pd.DataFrame(new_pixel_extract).to_csv(filepath_ras, sep=",", header=False, index=True)
         return control_points_extract, filepath_ras, new_pixel_extract
     
+    ## *** Calculation of Lyzenga parameters with the Least square method.
     def LL_linearRegression(control_points_extract, filepath_ras, result_dir, fname, new_pixel_extract):
 
         """
@@ -275,6 +325,7 @@ class SatelliteDerivedBathymetry_all:
         
         """
 
+        ## *** Coefficient matrix
         def Jacobian(points):
             J = np.zeros(shape=(1, 3))
             J[0][0] = 1
@@ -282,13 +333,17 @@ class SatelliteDerivedBathymetry_all:
             J[0][2] = points[1]
             return J
 
+        ## *** Approximation matrix
         def Approximation(a, b1, b2, x1, x2):
             L = a + b1*x1 + b2*x2
             return L
 
+        ## *** Calling the raster bands file and bathymetry points file as control points (.csv).
         rp = pd.read_csv(filepath_ras, sep=",", header=None, names=['x', 'y', 'band1', 'band2'])
         rp_pixel = np.array([rp.band1, rp.band2]).T
         cp_point = control_points_extract[:, 2]
+
+        ## *** Finding the index of more than 30m depth of bathymetry points.
         below30_index = np.where(control_points_extract[:, 2] <= -30)
         below30 = np.column_stack((below30_index[0], rp_pixel[below30_index[0]]))
         min_reflect_rhow = []
@@ -307,6 +362,8 @@ class SatelliteDerivedBathymetry_all:
         F = np.zeros(shape=(len(rp), 1))
         Iteration = 1
         error = 1
+
+        ## *** Repeat the computation until reached to the desired accuracy.
         while error > 10e-5:
             Approximate_value[0] = X[0]     # a
             Approximate_value[1] = X[1]     # b1
@@ -338,6 +395,7 @@ class SatelliteDerivedBathymetry_all:
         sys.stdout = stdout_fileno
         return X, rp_pixel, cp_point, min_reflect_rhow, rp_point
     
+    ## *** Log-Linear (Lyzenga) satellite derived bathymetry
     def LL_SDB(X, raster, min_reflect_rhow, out_meta, result_dir, fname, crs):
         nan_values_ras = {}
         for i in range(2):
