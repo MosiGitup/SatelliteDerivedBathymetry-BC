@@ -1,3 +1,8 @@
+"""
+# Copyright 2023 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Mohsen_Feizabadi ---
+"""
+
 import rasterio
 import os
 from tkinter import filedialog, Tk
