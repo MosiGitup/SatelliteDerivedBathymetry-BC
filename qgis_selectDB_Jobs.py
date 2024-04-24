@@ -73,9 +73,6 @@ print('')
 region_index = input('\033[1;32mSelect the region: ''\033[0m')
 display_map.kill()
 
-## *** Mysql connection
-Job_uri = "MySQL:" + mydb + ",host=" + host_name + ",port=" + host_port + ",user=" + host_user + ",password=" + host_pass + "|layername=" + host_layername + ""
-
 if 1 <= int(region_index) <= 4:
     reproject_crs = QgsCoordinateReferenceSystem("EPSG:3156")
     river_file = "River_epsg3156.shp"
@@ -100,8 +97,6 @@ elif region_index == '8':
     mapJson = geojson_path + '/' + 'T10UDV.geojson'
 elif region_index == '9':
     mapJson = geojson_path + '/' + 'T10UDA.geojson'
-
-Job_layer = QgsVectorLayer(Job_uri, "Jobs", "ogr")
 
 ## *** Create directory
 seconds = time.time()
