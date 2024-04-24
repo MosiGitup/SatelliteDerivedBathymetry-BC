@@ -28,12 +28,6 @@ project_path = sys.argv[1]  # e.g. "/home/.../SDB/"
 geojson_path = sys.argv[2]  # This directory exists
 river_path = sys.argv[3]    # This directory exists
 map_dir = sys.argv[4]       # The image exists in the main directory
-mydb = sys.argv[5]
-host_name = sys.argv[6]
-host_port = sys.argv[7]
-host_user = sys.argv[8]
-host_pass = sys.argv[9]
-host_layername = sys.argv[10]
 
 ## *** Initialize QGIS application
 QgsApplication.setPrefixPath("/usr/bin/qgis.bin", True)

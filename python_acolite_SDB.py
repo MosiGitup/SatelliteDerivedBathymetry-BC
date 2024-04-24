@@ -12,8 +12,8 @@ import pandas as pd
 from rasterio.merge import merge
 import shutil
 
-initialdir_txt = sys.argv[15]
-acolite_dir = sys.argv[16]
+initialdir_txt = sys.argv[9]
+acolite_dir = sys.argv[10]
 
 def tifConvertorForAcolite(vrtPath, pro_dir):
     searchCriteria = "*.tif"

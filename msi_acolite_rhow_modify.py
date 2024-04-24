@@ -3,9 +3,9 @@
 @Mohsen_Feizabadi ---
 """
 
-acolite_package = sys.argv[17]
-username_copernicus = sys.argv[18]
-password_copernicus = sys.argv[19]
+acolite_package = sys.argv[11]
+username_copernicus = sys.argv[12]
+password_copernicus = sys.argv[13]
 
 import sys, os
 UserHome = os.path.expanduser(acolite_package)

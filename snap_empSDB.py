@@ -3,11 +3,11 @@
 @Mohsen_Feizabadi ---
 """
 
-snappy_dir = sys.argv[23]
-username_copernicus = sys.argv[24]
-password_copernicus = sys.argv[25]
-download_dir = sys.argv[26]
-snap_bin_dir = sys.argv[27]
+snappy_dir = sys.argv[17]
+username_copernicus = sys.argv[18]
+password_copernicus = sys.argv[19]
+download_dir = sys.argv[20]
+snap_bin_dir = sys.argv[21]
 
 import sys
 sys.path.append(snappy_dir)

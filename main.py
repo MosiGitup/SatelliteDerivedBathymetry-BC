@@ -10,10 +10,10 @@ import pandas as pd
 import _pickle as pickle
 warnings.filterwarnings("ignore", message="Pandas requires version '2.7.3' or newer of 'numexpr'")
 
-vrt_dir = sys.argv[20]
-project_dir = sys.argv[21]
-acolite_dir = sys.argv[22]
-snap_output_dir = sys.argv[28]
+vrt_dir = sys.argv[14]
+project_dir = sys.argv[15]
+acolite_dir = sys.argv[16]
+snap_output_dir = sys.argv[22]
 
 def print_hi(name):
     print(f'\033[1;32m{name}\033[0;0m', '\n')

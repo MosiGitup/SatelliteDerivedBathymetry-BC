@@ -15,8 +15,8 @@ import requests
 from datetime import datetime, timedelta
 import _pickle as pickle
 
-username_copernicus = sys.argv[13]
-password_copernicus = sys.argv[14]
+username_copernicus = sys.argv[7]
+password_copernicus = sys.argv[8]
 
 def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, tileName):
     gjsonFile = gpd.read_file(gjson)

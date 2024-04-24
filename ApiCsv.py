@@ -8,8 +8,8 @@ import sys
 import requests
 from qgis_selectDB_Jobs import ymin_tile, ymax_tile, xmin_tile, xmax_tile, project_path, yr_mon_day, mapJson_name, yr, mn, dy, td, host_name
 
-access_email = sys.argv[11]
-access_key = sys.argv[12]
+access_email = sys.argv[5]
+access_key = sys.argv[6]
 
 csvPath = project_path
 today_csv = str(yr_mon_day.tm_year) + str(yr_mon_day.tm_mon) + str(yr_mon_day.tm_mday)
