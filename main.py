@@ -33,15 +33,13 @@ print('')
 processStep = input('\033[1;32mSelect one of the steps: ')
 if processStep == '1':
     print('')
-    if __name__ == '__main__':
-        print_hi('The bathymetry points are received with "ApiCsbBathy" in QGIS application. After time checking of these points with Sentinel-2 images, \n'
-                 'bathymetry surface ("Multilevel B-Spline" method) will be created. The output surface (.tif) will be prepared for the next step. \n')
+    print_hi('The bathymetry points are received with "ApiCsbBathy" in QGIS application. After time checking of these points with Sentinel-2 images, \n'
+             'bathymetry surface ("Multilevel B-Spline" method) will be created. The output surface (.tif) will be prepared for the next step. \n')
     import qgis_selectDB_Jobs
 elif processStep == '2':
     print('')
-    if __name__ == '__main__':
-        print_hi('The surfaces (.tif) convert to "Acolite" atmospheric correction program. After correction of Sentinel-2 (MSIL1C) images, the new "*rhow.tif" files \n'
-                 '(the surface level reflectance for water pixels) are applied in the "Satellite Derived Bathymetry" program. \n')
+    print_hi('The surfaces (.tif) convert to "Acolite" atmospheric correction program. After correction of Sentinel-2 (MSIL1C) images, the new "*rhow.tif" files \n'
+             '(the surface level reflectance for water pixels) are applied in the "Satellite Derived Bathymetry" program. \n')
     from python_acolite_SDB import tifConvertorForAcolite, msiAcoliteCalculation, mergeAcoliteTifOutputs, sdbCalculationFull
     root = Tk()
     vrt_path = filedialog.askdirectory(initialdir=vrt_dir, title='Select VRT .tif files directory')
@@ -61,9 +59,8 @@ elif processStep == '2':
     sdbCalculationFull(acoliteOutputDir, tifCRS, project_path, pro_dir, processStep, filtered_vectorSDB_projected)
 elif processStep == '3':
     print('')
-    if __name__ == '__main__':
-        print_hi('Sentinel-2 (MSIL2A) image will be downloaded (the same date as the previous step). Based on the selected region, the "Sampling", "Subset", \n'
-                 '"Sun-Deglint", "Land-Mask" and finally "Emperical Bathymetry" will be done in ESA-SNAP software. \n')
+    print_hi('Sentinel-2 (MSIL2A) image will be downloaded (the same date as the previous step). Based on the selected region, the "Sampling", "Subset", \n'
+             '"Sun-Deglint", "Land-Mask" and finally "Emperical Bathymetry" will be done in ESA-SNAP software. \n')
     print('\033[1;33m*** CLOSE SNAP DESKTOP !!! ***''\033[0m', '\n')
     fields = None
     for line in os.popen("ps ax | grep " + "SNAP" + " | grep -v grep"):
@@ -114,8 +111,7 @@ elif processStep == '3':
     EmpBathymetry(project_path, s2dirName)
 elif processStep == '4':
     print('')
-    if __name__ == '__main__':
-        print_hi('Both satellite bathymetry outputs (CIDCO and ESA-SNAP versions) are intergegrated with the selected region DEM (30m Copernicus Global DEM). \n')
+    print_hi('Both satellite bathymetry outputs (CIDCO and ESA-SNAP versions) are intergegrated with the selected region DEM (30m Copernicus Global DEM). \n')
     from SNAP_DEM_SDBcombination import SnapDemSdb
     root = Tk()
     acolite_dir = filedialog.askdirectory(initialdir=snap_output_dir, title='Select SDB outputs (from 3rd step) directory')
