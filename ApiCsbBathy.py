@@ -56,6 +56,7 @@ class CsvApi:
         else:
             print("Error: {}".format(r.status_code))
 
+
 csv = CsvApi()
 
 try:
