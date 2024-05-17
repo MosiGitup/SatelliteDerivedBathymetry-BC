@@ -6,7 +6,6 @@
 import os
 import glob
 import geojson
-from sentinelsat import read_geojson, geojson_to_wkt, SentinelAPI
 from shapely.geometry import Polygon
 from tkinter import filedialog, Tk
 import pandas as pd
