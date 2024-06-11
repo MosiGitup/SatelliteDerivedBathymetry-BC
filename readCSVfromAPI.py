@@ -12,6 +12,10 @@ def sdbCSVpath(csvPath):
         vectorSDB = pd.read_csv(csvPath, sep=",", header=None, names=['x', 'y', 'z', 't'])
     else:
         vectorSDB = pd.read_csv(csvPath, sep=",", header=None, names=['x', 'y', 'z_el', 'z_cd', 'id', 't'], low_memory=False)
+        lon = vectorSDB.x[0]
+        lat = vectorSDB.y[0]
+        z_el = vectorSDB.z_el[0]
+        z_cd = vectorSDB.z_cd[0]
         vectorSDB = vectorSDB.drop(vectorSDB.index[0])
     _, tileName = os.path.split(csvPath)
     tileName = tileName[:6]
@@ -26,4 +30,4 @@ def sdbCSVpath(csvPath):
     imageDownloadTime_from = timestamp_first[:10]
     timestamp_last = vectorSDB.t[len(vectorSDB) - 1][:19]
     imageDownloadTime_to = timestamp_last[:10]
-    return imageDownloadTime_from, imageDownloadTime_to, vectorSDB, vectorSDB_date, tileName
+    return imageDownloadTime_from, imageDownloadTime_to, vectorSDB, vectorSDB_date, tileName, lon, lat, z_el, z_cd
