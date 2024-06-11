@@ -121,25 +121,22 @@ db_bathymetryCsv = project_path + mapJson_name[:-8] + "_" + pro_dir[7:pro_dir.fi
 if not os.path.isfile(db_bathymetryCsv):
     from ApiCsbBathy import CsvApi, year, month, day
 
-output4 = "BathymetryPointsInsideTile.shp"
-processing.run("native:createpointslayerfromtable", {
-    'INPUT': QgsProcessingFeatureSourceDefinition(db_bathymetryCsv, selectedFeaturesOnly=False),
-    'XFIELD': 'Longitude',
-    'YFIELD': 'Latitude',
-    'ZFIELD': 'EllipsoidalHeight',
-    'TARGET_CRS': 'EPSG:4326',
-    'OUTPUT': project_path + pro_dir + '/' + output4})
-BathymetryPointsInsideTile = QgsVectorLayer(project_path + pro_dir + '/' + output4, 'BathymetryPointsInsideTile',
-                                            "ogr")
-BathymetryPointsInsideTile.setCrs(crs)
-project.addMapLayer(BathymetryPointsInsideTile)
-
 ## *** Verify Sentinel-2 images for the current timestamp
 from readCSVfromAPI import sdbCSVpath
 from SentinelAcquisition import SentinelQuery
-
-date1, date2, vectorSDB, vectorSDB_date, tileName = sdbCSVpath(db_bathymetryCsv)
+date1, date2, vectorSDB, vectorSDB_date, tileName, lon, lat, z_el, z_cd = sdbCSVpath(db_bathymetryCsv)
 imageList, uuidList, filtered_vectorSDB = SentinelQuery(project_path + pro_dir, mapJson, date1, date2, vectorSDB, vectorSDB_date, tileName)
+
+output4 = "BathymetryPointsInsideTile.shp"
+processing.run("native:createpointslayerfromtable", {'INPUT': QgsProcessingFeatureSourceDefinition(db_bathymetryCsv, selectedFeaturesOnly=False),
+                                                     'XFIELD': lon,
+                                                     'YFIELD': lat,
+                                                     'ZFIELD': z_el,
+                                                     'TARGET_CRS': 'EPSG:4326',
+                                                     'OUTPUT': project_path + pro_dir + '/' + output4})
+BathymetryPointsInsideTile = QgsVectorLayer(project_path + pro_dir + '/' + output4, 'BathymetryPointsInsideTile', "ogr")
+BathymetryPointsInsideTile.setCrs(crs)
+project.addMapLayer(BathymetryPointsInsideTile)
 
 '''
 ***** Creation of Bathymetry Surface (WGS84) *****
