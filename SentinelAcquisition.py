@@ -116,11 +116,11 @@ def SentinelQuery(project_path, gjson, date1, date2, vectorSDB, vectorSDB_date, 
                 one_hour_after = sat_date_time + timedelta(hours=1)
                 new_vectorSDB = pd.to_datetime(vectorSDB['t'][1:])
                 bathy_vectorSDB = new_vectorSDB[(new_vectorSDB >= one_hour_before) & (new_vectorSDB <= one_hour_after)]
-                filtered_vectorSDB[sat_image[-15:]] = bathy_vectorSDB
+                filtered_vectorSDB[sat_image[11:26]] = bathy_vectorSDB
                 bathyPointsInImage = len(bathy_vectorSDB)
                 print('\033[1;36mNumber of bathymetry points in this acqusition imagery --> ' + str(bathyPointsInImage) + '\033[0m')
                 if bathy_vectorSDB.empty:
-                    filtered_vectorSDB.pop(sat_image[-15:])
+                    filtered_vectorSDB.pop(sat_image[11:26])
                     if Img_oneLoop > 1:
                         qst2 = 1
                         continue
