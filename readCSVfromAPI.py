@@ -16,6 +16,7 @@ def sdbCSVpath(csvPath):
         lat = vectorSDB.y[0]
         z_el = vectorSDB.z_el[0]
         z_cd = vectorSDB.z_cd[0]
+        
         vectorSDB = vectorSDB.drop(vectorSDB.index[0])
     _, tileName = os.path.split(csvPath)
     tileName = tileName[:6]
