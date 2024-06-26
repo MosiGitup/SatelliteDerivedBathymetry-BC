@@ -20,7 +20,7 @@ class SatelliteDerivedBathymetry_all:
     """
 
     ## *** Its input are two bands (.tif) of L2W acolite outputs. Its outputs are two .csv files which includes; x, y and pixel value columns.
-    def how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, crs):
+    def how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, acol_crs):
         if select_process == '1':
 
             ## *** select the bands (e.g. rhow_492 and rhow_560)
@@ -73,7 +73,7 @@ class SatelliteDerivedBathymetry_all:
         if select_process == '1':
             ratio_bands = np.log10(1000*raster[0])/np.log10(1000*raster[1])
             out_meta.update({"driver": "GTiff",
-                             "crs": crs
+                             "crs": acol_crs
                              })
             filepath_bandRatio = result_dir + '/BandRatio_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.tif'
             print('\033[1;34m', 'The band ratio .tif file of ' + fname[0][-18:-10] + ' and ' + fname[1][-18:-10] + ' is saved: ' +
@@ -255,10 +255,10 @@ class SatelliteDerivedBathymetry_all:
         return X, rp_pixel, cp_point, rp_point
     
     ## *** Band ratio (Stumpf) satellite derived bathymetry
-    def BR_SDB(X, ratio_bands, out_meta, result_dir, fname, crs):
+    def BR_SDB(X, ratio_bands, out_meta, result_dir, fname, acol_crs):
         SDB = X[0][0] * ratio_bands + X[1][0]
         out_meta.update({"driver": "GTiff",
-                         "crs": crs
+                         "crs": acol_crs
                          })
         print('')
         filepath_SDB = result_dir + '/SDB_BandRatio_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.tif' 
@@ -405,14 +405,14 @@ class SatelliteDerivedBathymetry_all:
         return X, rp_pixel, cp_point, min_reflect_rhow, rp_point
     
     ## *** Log-Linear (Lyzenga) satellite derived bathymetry
-    def LL_SDB(X, raster, min_reflect_rhow, out_meta, result_dir, fname, crs):
+    def LL_SDB(X, raster, min_reflect_rhow, out_meta, result_dir, fname, acol_crs):
         nan_values_ras = {}
         for i in range(2):
             nan_values_ras[i] = np.where(raster[i][0] - min_reflect_rhow[i] <= 0.00000001)
             raster[i][0][nan_values_ras[i][0], nan_values_ras[i][1]] = min_reflect_rhow[i] + 0.0001
         SDB = X[0][0] + (X[1][0] * np.log(raster[0][0] - min_reflect_rhow[0])) + (X[2][0] * np.log(raster[1][0] - min_reflect_rhow[1]))
         out_meta.update({"driver": "GTiff",
-                         "crs": crs
+                         "crs": acol_crs
                          })
         print('')
         filepath_SDB = result_dir + '/SDB_LogLinear_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '.tif'

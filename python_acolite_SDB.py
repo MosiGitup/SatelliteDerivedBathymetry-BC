@@ -10,6 +10,7 @@ import numpy as np
 import csv, os, sys, fnmatch
 import pandas as pd
 from rasterio.merge import merge
+from rasterio.warp import calculate_default_transform, reproject, Resampling
 import shutil
 
 initialdir_txt = sys.argv[9]
@@ -110,7 +111,7 @@ def msiAcoliteCalculation(txtPath, crs, pro_dir, sdb_csv_path, tileName, uuidLis
     return acoliteOutputDir, acoliteImagedir, acolitesFile, filtered_vectorSDB_projected
 
 
-def mergeAcoliteTifOutputs(acolitePath):
+def mergeAcoliteTifOutputs(acolitePath, tifCRS):
     dirAcolite = os.listdir(acolitePath)
     for acoliteDir in dirAcolite:
         acolite_folder = list(os.walk(acolitePath + '/' + acoliteDir))
@@ -155,8 +156,41 @@ def mergeAcoliteTifOutputs(acolitePath):
                                    **sort_meta[i - 1]) as dest:
                     dest.write(mosaic)
 
+    search_criteria = "*.tif"
+    project = tifCRS
+    for acoliteDir in dirAcolite:
+        comp_files = os.path.join(acolitePath + '/' + acoliteDir, search_criteria)
+        merge_folder = glob.glob(comp_files)
+        image_list = []
+        out_meta = {}
+        for i in range(len(merge_folder)):
+            full_path = os.path.realpath(merge_folder[i])
+            _, filename = os.path.split(full_path)
+            src = rasterio.open(merge_folder[i])
+            image_list.append(src)
+            out_meta[i] = image_list[i].meta.copy()
+            transform, width, height = calculate_default_transform(image_list[i].crs, project, image_list[i].width, image_list[i].height, *image_list[i].bounds)
+            kwargs = image_list[i].meta.copy()
+            kwargs.update({
+                'crs': project,
+                'transform': transform,
+                'width': width,
+                'height': height
+            })
+            with rasterio.open(acolitePath + '/' + acoliteDir + '/' + filename, "w", **kwargs) as dst:
+                for t in range(1, image_list[i].count + 1):
+                    reproject(
+                        source=rasterio.band(image_list[i], t),
+                        destination=rasterio.band(dst, t),
+                        image_transform=image_list[i].transform,
+                        image_crs=image_list[i].crs,
+                        dst_transform=transform,
+                        dst_crs=project,
+                        resampling=Resampling.nearest)
+    return project
 
-def sdbCalculationFull(acoliteOutputDir, crs, project_path, pro_dir, processStep, filtered_vectorSDB_projected):
+
+def sdbCalculationFull(acoliteOutputDir, project_path, pro_dir, processStep, filtered_vectorSDB_projected, acol_crs):
     from SatelliteDerivedBathymetry import SatelliteDerivedBathymetry_all
     dirAcolite = os.listdir(acoliteOutputDir)
     for acoliteDir in dirAcolite:
@@ -174,11 +208,11 @@ def sdbCalculationFull(acoliteOutputDir, crs, project_path, pro_dir, processStep
             tif_path = None
             output_dir = None
             vector_csv_path = None
-            raster, save_dir, output_dir_path, ratio_bands, out_meta, filepath_how, result_dir, fname, lons_array, lats_array, tif_path, output_dir = SatelliteDerivedBathymetry_all.how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, crs)
+            raster, save_dir, output_dir_path, ratio_bands, out_meta, filepath_how, result_dir, fname, lons_array, lats_array, tif_path, output_dir = SatelliteDerivedBathymetry_all.how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, acol_crs)
             filepath_vec, vector_csv_path = SatelliteDerivedBathymetry_all.intersectPointPixel(filepath_how, select_process, vector_csv_path, output_dir_path, save_dir, qgisPath, filtered_vectorSDB_projected[acoliteDir])
             control_points_extract, filepath_ras, new_pixel_extract = SatelliteDerivedBathymetry_all.BR_PointrasterCoordinates(filepath_how, filepath_vec, save_dir, fname)
             X, rp_pixel, cp_point, rp_point = SatelliteDerivedBathymetry_all.BR_linearRegression(control_points_extract, filepath_ras, result_dir, fname, new_pixel_extract)
-            SDB = SatelliteDerivedBathymetry_all.BR_SDB(X, ratio_bands, out_meta, result_dir, fname, crs)
+            SDB = SatelliteDerivedBathymetry_all.BR_SDB(X, ratio_bands, out_meta, result_dir, fname, acol_crs)
             filepath_excel = result_dir + '/band_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '_linear.csv'
             pd.DataFrame(np.stack((cp_point, rp_point, rp_pixel), axis=1)).to_csv(filepath_excel, sep=",", header=False, index=True)
             SDB_array = np.asarray(SDB).reshape(-1)
@@ -191,11 +225,11 @@ def sdbCalculationFull(acoliteOutputDir, crs, project_path, pro_dir, processStep
 
             # *** Log-Linear
             select_process = '2'
-            raster, save_dir, output_dir_path, out_meta, filepath_how, result_dir, fname, lons_array, lats_array = SatelliteDerivedBathymetry_all.how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, crs)
+            raster, save_dir, output_dir_path, out_meta, filepath_how, result_dir, fname, lons_array, lats_array = SatelliteDerivedBathymetry_all.how_tif_inputs(acoliteaPath, select_process, tif_path, output_dir, acol_crs)
             filepath_vec, _ = SatelliteDerivedBathymetry_all.intersectPointPixel(filepath_how, select_process, vector_csv_path, output_dir_path, save_dir, qgisPath, filtered_vectorSDB_projected[acoliteDir])
             control_points_extract, filepath_ras, new_pixel_extract = SatelliteDerivedBathymetry_all.LL_PointrasterCoordinates(filepath_how, filepath_vec, save_dir, fname)
             X, rp_pixel, cp_point, min_reflect_rhow, rp_point = SatelliteDerivedBathymetry_all.LL_linearRegression(control_points_extract, filepath_ras, result_dir, fname, new_pixel_extract)
-            SDB = SatelliteDerivedBathymetry_all.LL_SDB(X, raster, min_reflect_rhow, out_meta, result_dir, fname, crs)
+            SDB = SatelliteDerivedBathymetry_all.LL_SDB(X, raster, min_reflect_rhow, out_meta, result_dir, fname, acol_crs)
             filepath_excel = result_dir + '/band_' + fname[0][-13:-10] + '_' + fname[1][-13:-10] + '_multiLinear.csv'
             pd.DataFrame(np.stack((cp_point, rp_point), axis=1)).to_csv(filepath_excel, sep=",", header=False, index=True)
             SDB_array = np.asarray(SDB).reshape(-1)

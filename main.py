@@ -55,8 +55,8 @@ elif processStep == '2':
         varDict = pickle.loads(handle.read())
     Date = (varDict['date1'], varDict['date2'])
     acoliteOutputDir, acoliteImagedir, acolitesFile, filtered_vectorSDB_projected = msiAcoliteCalculation(surfaceTXTpath, tifCRS, pro_dir, sdb_csv_path, tileName, varDict['uuidList'], varDict['imageList'], Date, varDict['vectorSDB_date'], varDict['filtered_vectorSDB'])
-    mergeAcoliteTifOutputs(acoliteOutputDir)
-    sdbCalculationFull(acoliteOutputDir, tifCRS, project_path, pro_dir, processStep, filtered_vectorSDB_projected)
+    acol_crs = mergeAcoliteTifOutputs(acoliteOutputDir, tifCRS)
+    sdbCalculationFull(acoliteOutputDir, project_path, pro_dir, processStep, filtered_vectorSDB_projected, acol_crs)
 elif processStep == '3':
     print('')
     print_hi('Sentinel-2 (MSIL2A) image will be downloaded (the same date as the previous step). Based on the selected region, the "Sampling", "Subset", \n'

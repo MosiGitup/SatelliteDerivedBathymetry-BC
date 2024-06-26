@@ -61,16 +61,16 @@ for j in range(len(epsg_region)):
     for i in range(k, len(bcRegions)):
         print(str(i + 1), '- ' + bcRegions[i])
         k += 1
-        if i == 3:
+        if i == 1:
             break
 print('')
 region_index = input('\033[1;32mSelect the region: ''\033[0m')
 display_map.kill()
 
-if 1 <= int(region_index) <= 4:
+if 1 <= int(region_index) <= 2:
     reproject_crs = QgsCoordinateReferenceSystem("EPSG:3156")
     river_file = "River_epsg3156.shp"
-elif 5 <= int(region_index) <= 9:
+elif 3 <= int(region_index) <= 9:
     reproject_crs = QgsCoordinateReferenceSystem("EPSG:3157")
     river_file = "River_epsg3157.shp"
 if region_index == '1':
