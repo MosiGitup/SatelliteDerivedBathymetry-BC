@@ -31,4 +31,7 @@ def sdbCSVpath(csvPath):
     imageDownloadTime_from = timestamp_first[:10]
     timestamp_last = vectorSDB.t[len(vectorSDB) - 1][:19]
     imageDownloadTime_to = timestamp_last[:10]
-    return imageDownloadTime_from, imageDownloadTime_to, vectorSDB, vectorSDB_date, tileName, lon, lat, z_el, z_cd
+    if "_sdb.csv" in csvPath:
+        return imageDownloadTime_from, imageDownloadTime_to, vectorSDB, vectorSDB_date, tileName
+    else:
+        return imageDownloadTime_from, imageDownloadTime_to, vectorSDB, vectorSDB_date, tileName, lon, lat, z_el, z_cd
